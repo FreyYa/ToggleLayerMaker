@@ -85,6 +85,59 @@ namespace FreyYa
 			var resultParamName = FX.MakeUniqueParameterName(paramName);
 			var resultLayerName = FX.MakeUniqueLayerName(paramName);
 
+			//VRC 파라메터 추가
+			if (paramFile.FindParameter(resultParamName) == null)
+			{
+				//파라메터가 없으면 추가 진행한다
+				var cost = paramFile.CalcTotalCost();
+				if (cost > 128)
+				{
+					if (!TryAddParam(paramFile, resultParamName))
+					{
+						return "Cannot add VRC parameter (Cost is max)";
+					}
+				}
+				else
+				{
+					//파라메터 추가 시도
+					var currentParamList = paramFile.parameters.ToList();
+					int totalCost = 0;
+					foreach (var parameter in currentParamList)
+					{
+						switch (parameter.valueType)
+						{
+							case VRCExpressionParameters.ValueType.Int:
+							case VRCExpressionParameters.ValueType.Float:
+								totalCost += 8;
+								break;
+							case VRCExpressionParameters.ValueType.Bool:
+								totalCost += 1;
+								break;
+						}
+					}
+					if (totalCost + 1 > 128)
+					{
+						//하나 더 추가할 용량이 없을 시 시도
+						if (!TryAddParam(paramFile, resultParamName))
+						{
+							return "Cannot add VRC parameter (Cost is max)";
+						}
+					}
+					VRCExpressionParameters.Parameter param = new VRCExpressionParameters.Parameter();
+					param.name = resultParamName;
+					param.valueType = VRCExpressionParameters.ValueType.Bool;
+					param.defaultValue = 0f;
+					param.saved = false;
+					currentParamList.Add(param);
+					paramFile.parameters = currentParamList.ToArray();
+				}
+			}
+			else
+			{
+				paramFile.FindParameter(resultParamName).valueType = VRCExpressionParameters.ValueType.Bool;
+				paramFile.FindParameter(resultParamName).defaultValue = 0f;
+			}
+
 			FX.AddParameter(resultParamName, AnimatorControllerParameterType.Bool);
 
 			//https://forum.unity.com/threads/animatorcontroller-addlayer-doesnt-create-default-animatorstatemachine.307873/
@@ -124,13 +177,13 @@ namespace FreyYa
 			nullToTurnOnTrans.exitTime = 0;
 			nullToTurnOnTrans.duration = 0;
 
-			nullToTurnOnTrans.AddCondition(UnityEditor.Animations.AnimatorConditionMode.If, 0, paramName);
+			nullToTurnOnTrans.AddCondition(UnityEditor.Animations.AnimatorConditionMode.If, 0, resultParamName);
 
 			nullToTurnOffTrans.hasExitTime = false;
 			nullToTurnOffTrans.exitTime = 0;
 			nullToTurnOffTrans.duration = 0;
 
-			nullToTurnOffTrans.AddCondition(UnityEditor.Animations.AnimatorConditionMode.IfNot, 0, paramName);
+			nullToTurnOffTrans.AddCondition(UnityEditor.Animations.AnimatorConditionMode.IfNot, 0, resultParamName);
 
 			var offToOnTrans = turnoffState.AddTransition(turnonState);
 			var onToOffTrans = turnonState.AddTransition(turnoffState);
@@ -139,67 +192,13 @@ namespace FreyYa
 			offToOnTrans.exitTime = 0;
 			offToOnTrans.duration = 0;
 
-			offToOnTrans.AddCondition(UnityEditor.Animations.AnimatorConditionMode.If, 0, paramName);
+			offToOnTrans.AddCondition(UnityEditor.Animations.AnimatorConditionMode.If, 0, resultParamName);
 
 			onToOffTrans.hasExitTime = false;
 			onToOffTrans.exitTime = 0;
 			onToOffTrans.duration = 0;
 
-			onToOffTrans.AddCondition(UnityEditor.Animations.AnimatorConditionMode.IfNot, 0, paramName);
-
-			//VRC 파라메터 추가
-			if (paramFile.FindParameter(paramName) == null)
-			{
-				//파라메터가 없으면 추가 진행한다
-				var cost = paramFile.CalcTotalCost();
-				if (cost > 128)
-				{
-					if (!TryAddParam(paramFile, paramName))
-					{
-						return "Cannot add VRC parameter (Cost is max)";
-					}
-				}
-				else
-				{
-					//파라메터 추가 시도
-					var currentParamList = paramFile.parameters.ToList();
-					int totalCost = 0;
-					foreach (var parameter in currentParamList)
-					{
-						switch (parameter.valueType)
-						{
-							case VRCExpressionParameters.ValueType.Int:
-							case VRCExpressionParameters.ValueType.Float:
-								totalCost += 8;
-								break;
-							case VRCExpressionParameters.ValueType.Bool:
-								totalCost += 1;
-								break;
-						}
-					}
-					if (totalCost + 1 > 128)
-					{
-						//하나 더 추가할 용량이 없을 시 시도
-						if (!TryAddParam(paramFile, paramName))
-						{
-							return "Cannot add VRC parameter (Cost is max)";
-						}
-					}
-					VRCExpressionParameters.Parameter param = new VRCExpressionParameters.Parameter();
-					param.name = paramName;
-					param.valueType = VRCExpressionParameters.ValueType.Bool;
-					param.defaultValue = 0f;
-					param.saved = false;
-					currentParamList.Add(param);
-					paramFile.parameters = currentParamList.ToArray();
-				}
-			}
-			else
-			{
-				paramFile.FindParameter(paramName).valueType = VRCExpressionParameters.ValueType.Bool;
-				paramFile.FindParameter(paramName).defaultValue = 0f;
-			}
-
+			onToOffTrans.AddCondition(UnityEditor.Animations.AnimatorConditionMode.IfNot, 0, resultParamName);
 
 			return "Success!";
 		}
