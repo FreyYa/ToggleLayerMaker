@@ -90,7 +90,7 @@ namespace FreyYa
 			{
 				//파라메터가 없으면 추가 진행한다
 				var cost = paramFile.CalcTotalCost();
-				if (cost > 128)
+				if (cost > 256)
 				{
 					if (!TryAddParam(paramFile, resultParamName))
 					{
@@ -115,7 +115,7 @@ namespace FreyYa
 								break;
 						}
 					}
-					if (totalCost + 1 > 128)
+					if (totalCost + 1 > 256)
 					{
 						//하나 더 추가할 용량이 없을 시 시도
 						if (!TryAddParam(paramFile, resultParamName))
