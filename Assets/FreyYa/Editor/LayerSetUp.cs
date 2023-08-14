@@ -1,6 +1,3 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Animations;
@@ -137,6 +134,7 @@ namespace FreyYa
 				paramFile.FindParameter(resultParamName).valueType = VRCExpressionParameters.ValueType.Bool;
 				paramFile.FindParameter(resultParamName).defaultValue = 0f;
 			}
+			EditorUtility.SetDirty(paramFile);
 
 			FX.AddParameter(resultParamName, AnimatorControllerParameterType.Bool);
 
@@ -200,7 +198,8 @@ namespace FreyYa
 
 			onToOffTrans.AddCondition(UnityEditor.Animations.AnimatorConditionMode.IfNot, 0, resultParamName);
 
-			return "Success!";
+			AssetDatabase.SaveAssets();
+			return resultParamName + "Success!";
 		}
 
 		private bool TryAddParam(VRCExpressionParameters paramFile, string paramName)
