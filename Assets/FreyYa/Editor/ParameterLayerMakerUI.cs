@@ -1,8 +1,9 @@
-﻿using UnityEditor;
+using UnityEditor;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace FreyYa
 {
@@ -11,6 +12,8 @@ namespace FreyYa
 		private GameObject baseAvatar;
 		private string status;
 		private string paramName;
+		private string paramGroupName;
+		private string paramType;
 		private AnimationClip turnOn;
 		private AnimationClip turnOff;
 
@@ -24,6 +27,8 @@ namespace FreyYa
 		}
 		private void Setup()
 		{
+			paramType = "Toggle";
+			paramGroupName = "Group";
 		}
 		private void OnGUI()
 		{
@@ -32,6 +37,16 @@ namespace FreyYa
 			GUILayout.BeginHorizontal();
 			UnityEditor.EditorGUILayout.LabelField("Avartar");
 			baseAvatar = UnityEditor.EditorGUILayout.ObjectField(baseAvatar, typeof(GameObject), true) as GameObject;
+			GUILayout.EndHorizontal();
+
+			GUILayout.BeginHorizontal();
+			UnityEditor.EditorGUILayout.LabelField("Parameter Type");
+			paramType = UnityEditor.EditorGUILayout.TextField(paramType);
+			GUILayout.EndHorizontal();
+
+			GUILayout.BeginHorizontal();
+			UnityEditor.EditorGUILayout.LabelField("Parameter Group Name");
+			paramGroupName = UnityEditor.EditorGUILayout.TextField(paramGroupName);
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
@@ -50,6 +65,14 @@ namespace FreyYa
 			UnityEditor.EditorGUILayout.LabelField("Turn Off Animation");
 			turnOff = UnityEditor.EditorGUILayout.ObjectField(turnOff, typeof(AnimationClip), true) as AnimationClip;
 			GUILayout.EndHorizontal();
+
+			if (GUI.changed)
+			{
+				if (turnOn != null)
+				{
+					paramName = turnOn.name;
+				}
+			}
 
 			UnityEditor.EditorGUILayout.LabelField(status);
 			if (GUILayout.Button("Make it!"))
@@ -74,7 +97,21 @@ namespace FreyYa
 
 					LayerSetUp setup = new LayerSetUp();
 
-					status = setup.SetupLayers(avatarDescriptor, paramName, turnOn, turnOff);
+					StringBuilder paramStbr = new StringBuilder();
+					if (paramType != string.Empty)
+					{
+						paramStbr.Append(paramType + "/");
+					}
+					if (paramGroupName != string.Empty)
+					{
+						paramStbr.Append(paramGroupName + "/");
+					}
+					if (paramName != string.Empty)
+					{
+						paramStbr.Append(paramName);
+					}
+
+					status = setup.SetupLayers(avatarDescriptor, paramStbr.ToString(), turnOn, turnOff);
 				}
 			}
 			catch (System.Exception ex)
